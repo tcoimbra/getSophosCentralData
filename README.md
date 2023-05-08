@@ -16,7 +16,7 @@ ClientSecret:<client secret from Sophos Central>
 ```
 
 ## Dashboard grafana
-https://grafana.com/grafana/dashboards/18693
+Get the grafana dashboard in order to import it here: https://grafana.com/grafana/dashboards/18693
 
 ## Telegraf configuration
 ```
