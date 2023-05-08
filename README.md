@@ -1,6 +1,8 @@
 # getSophosCentralData
 Get statistics about alerts, computers and servers from Sophos Central. use Telegraf, influxDB and Grafana to display a security dashboard. This script was made to display the relevant Sophps Central alerts and stats on a Grafana dashboard.
 
+![alt text](https://raw.githubusercontent.com/tcoimbra/getSophosCentralData/main/screen1.png) 
+
 ## script configuration
 You need to get the Client ID and Client secret from Sophos Central. Check this page for help: https://developer.sophos.com/getting-started
 You need then to set these credentials in the getSophosCentralData.config:
