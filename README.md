@@ -12,7 +12,52 @@ ClientSecret:<client secret from Sophos Central>
 
 ## getSophosCentralData.py script output example 
 ```json
-{"stats": {"alerts": {"high": 0, "medium": 0, "low": 2}, "computers": {"total": 334, "good": 323, "suspicious": 11, "bad": 0, "unknown": 0, "totalnotok": 11, "osStats": {"Windows 10 Pro 10.0.18363": 37, "Windows 10 Pro 10.0.19045": 217, "Windows 10 Pro 10.0.16299": 16, "Windows 10 Pro 10.0.17763": 16, "Windows 10 Pro 10.0.19042": 35, "Windows 10 Pro 10.0.19044": 5, "Windows 10 Enterprise 10.0.19045": 2, "Windows 10 Pro for Workstations 10.0.17763": 2, "Windows 7 Professional Service Pack 1 6.1.7601": 3, "Windows 10 Enterprise 10.0.19044": 1}}, "servers": {"total": 85, "good": 85, "suspicious": 0, "bad": 0, "unknown": 0, "totalnotok": 0, "osStats": {"Windows Server 2019 Datacenter 10.0.17763": 13, "Windows Server 2019 Standard 10.0.17763": 32, "Windows Server 2016 Standard 10.0.14393": 20, "Ubuntu 20.04.6 LTS 0.0.0": 4, "Windows Server 2012 R2 Standard 6.3.9600": 8, "Windows Server 2012 Datacenter 6.2.9200": 3, "Ubuntu 22.04.2 LTS 0.0.0": 1, "Windows Server 2019 Essentials 10.0.17763": 1}}}}
+{
+  "stats": {
+    "alerts": {
+      "high": 0,
+      "medium": 0,
+      "low": 2
+    },
+    "computers": {
+      "total": 334,
+      "good": 323,
+      "suspicious": 11,
+      "bad": 0,
+      "unknown": 0,
+      "totalnotok": 11,
+      "osStats": {
+        "Windows 10 Pro 10.0.18363": 37,
+        "Windows 10 Pro 10.0.19045": 217,
+        "Windows 10 Pro 10.0.16299": 16,
+        "Windows 10 Pro 10.0.17763": 16,
+        "Windows 10 Pro 10.0.19042": 35,
+        "Windows 10 Pro 10.0.19044": 5,
+        "Windows 10 Enterprise 10.0.19045": 2,
+        "Windows 10 Pro for Workstations 10.0.17763": 2,
+        "Windows 10 Enterprise 10.0.19044": 1
+      }
+    },
+    "servers": {
+      "total": 85,
+      "good": 85,
+      "suspicious": 0,
+      "bad": 0,
+      "unknown": 0,
+      "totalnotok": 0,
+      "osStats": {
+        "Windows Server 2019 Datacenter 10.0.17763": 13,
+        "Windows Server 2019 Standard 10.0.17763": 32,
+        "Windows Server 2016 Standard 10.0.14393": 20,
+        "Ubuntu 20.04.6 LTS 0.0.0": 4,
+        "Windows Server 2012 R2 Standard 6.3.9600": 8,
+        "Windows Server 2012 Datacenter 6.2.9200": 3,
+        "Ubuntu 22.04.2 LTS 0.0.0": 1,
+        "Windows Server 2019 Essentials 10.0.17763": 1
+      }
+    }
+  }
+}
 ```
 
 ## Dashboard grafana
