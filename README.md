@@ -72,6 +72,8 @@ Get the grafana dashboard in order to import it here: https://grafana.com/grafan
  interval = "10m"
  timeout = "120s"
 ```
+## Credits
+I took some methods from https://github.com/sophos/PS.Unprotected_Machines when I started this script. Thanks to Michael Curtis from Sophos Professional Services.
 
 ## Sources:
 - https://github.com/sophos/PS.Unprotected_Machines
