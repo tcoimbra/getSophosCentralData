@@ -2,7 +2,7 @@
 # getSophosCentralData.py
 #
 # get statistics about alerts, computers and servers from Sophos central.
-# connection 
+# connection
 #----------------------------------------------------------------------------
 # Created By  : Tiago Coimbra
 # Created Date: 26.11.2022
@@ -53,19 +53,20 @@ def get_bearer_token(client, secret, url):
         return None  # JSON decoding error
     return headers
 
+
 def get_whoami():
     whoami_url = 'https://api.central.sophos.com/whoami/v1'
     try:
         request_whoami = requests.get(whoami_url, headers=headers)
         request_whoami.raise_for_status()  # Raises HTTPError for bad responses
         whoami = request_whoami.json()
-        
+
         organization_type = whoami.get("idType", "unknown")
         organization_header = {
             "partner": "X-Partner-ID",
             "organization": "X-Organization-ID"
         }.get(organization_type, "X-Tenant-ID")
-        
+
         organization_id = whoami.get("id", "unknown")
         region_url = whoami.get('apiHosts', {}).get("dataRegion", None)
 
@@ -76,6 +77,7 @@ def get_whoami():
         print(f"Error decoding JSON: {e}")
         return None, None, None, None
     return organization_id, organization_header, organization_type, region_url
+
 
 def read_config():
     config = configparser.ConfigParser()
@@ -90,6 +92,7 @@ def read_config():
         print(f"Error reading configuration: {e}")
         return None, None  # General configuration error indicator
     return client_id, client_secret
+
 
 # get alerts from Sophos Central
 def get_Alerts():
@@ -110,15 +113,16 @@ def get_Alerts():
         print("Failed to decode JSON response:", e)
         return {}  # or return an appropriate value indicating the issue
 
+
 # get endpoints data from sophos central
 def get_Endpoints(endpoint_type):
     headers[organization_header] = organization_id
     # Assuming `region_url` can be used to construct the full URL dynamically. If not applicable, adjust accordingly.
     base_url = region_url if region_url else "https://api-eu02.central.sophos.com"
     request_url = f"{base_url}/endpoint/v1/endpoints?view=summary&lastSeenAfter=-P30D&pageSize=500&type={endpoint_type}"
-    
+
     response = requests.get(request_url, headers=headers)
-    
+
     if response.status_code != 200:
         print(f"Error fetching {endpoint_type} endpoints: HTTP {response.status_code}")
         print("Response:", response.text)
@@ -134,6 +138,8 @@ def get_Endpoints(endpoint_type):
     except ValueError as e:
         print(f"Failed to decode JSON response for {endpoint_type} endpoints:", e)
         return {}  # or an appropriate value indicating the issue
+
+
 
 client_id, client_secret = read_config()
 token_url = 'https://id.sophos.com/api/v2/oauth2/token'
@@ -188,6 +194,7 @@ totalComputersNOTOK = 0
 computerOSStats = {}
 
 for item in computers["items"]:
+    if "health" in item:
         totalComputers += 1
         if item["health"]["overall"]=="good":
             totalComputersOK += 1
@@ -198,7 +205,7 @@ for item in computers["items"]:
         elif item["health"]["overall"]=="unknown":
             totalComputersUnknown +=1
         # OS stats
-        osVersion = str(item["os"]["name"]) + " " + str(item["os"]["majorVersion"]) + "." + str(item["os"]["minorVersion"]) + "." + str(item["os"]["build"])
+        osVersion = str(item["os"]["name"]) + " " + str(item["os"]["majorVersion"]) + "." + str(item["os"]["minorVersion"]) #+ "." + str(item["os"]["build"])
         if osVersion in computerOSStats.keys():
             computerOSStats[osVersion] += 1
         else:
