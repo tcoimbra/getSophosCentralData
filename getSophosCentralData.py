@@ -35,69 +35,105 @@ time_stamp = str(now.strftime("%d%m%Y_%H-%M-%S"))
 # Get Access Token - JWT in the documentation
 def get_bearer_token(client, secret, url):
     d = {
-                'grant_type': 'client_credentials',
-                'client_id': client,
-                'client_secret': secret,
-                'scope': 'token'
-            }
-    request_token = requests.post(url, auth=(client, secret), data=d)
-    json_token = request_token.json()
-    headers = {'Authorization': str('Bearer ' + json_token['access_token'])}
+        'grant_type': 'client_credentials',
+        'client_id': client,
+        'client_secret': secret,
+        'scope': 'token'
+    }
+    try:
+        request_token = requests.post(url, auth=(client, secret), data=d)
+        request_token.raise_for_status()  # Raises an error for bad responses
+        json_token = request_token.json()
+        headers = {'Authorization': 'Bearer ' + json_token['access_token']}
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error during token request: {e}")
+        return None  # Indicates failure to get token
+    except ValueError as e:
+        print(f"Error decoding JSON during token request: {e}")
+        return None  # JSON decoding error
     return headers
 
 def get_whoami():
-    # We now have our JWT Access Token. We now need to find out if we are a Partner or Organization
-    # Partner = MSP
-    # Organization = Sophos Central Enterprise Dashboard
-    # The whoami URL
     whoami_url = 'https://api.central.sophos.com/whoami/v1'
-    request_whoami = requests.get(whoami_url, headers=headers)
-    whoami = request_whoami.json()
-    # MSP or Sophos Central Enterprise Dashboard
-    # We don't use this variable in this script. It returns the organization type
-    organization_type = whoami["idType"]
-    if whoami["idType"] == "partner":
-        organization_header= "X-Partner-ID"
-    elif whoami["idType"] == "organization":
-        organization_header = "X-Organization-ID"
-    else:
-        organization_header = "X-Tenant-ID"
-    organization_id = whoami["id"]
-    # The region_url is used if Sophos Central is a tenant
-    region_url = whoami.get('apiHosts', {}).get("dataRegion", None)
-    return organization_id, organization_header, organization_type, region_url
+    try:
+        request_whoami = requests.get(whoami_url, headers=headers)
+        request_whoami.raise_for_status()  # Raises HTTPError for bad responses
+        whoami = request_whoami.json()
+        
+        organization_type = whoami.get("idType", "unknown")
+        organization_header = {
+            "partner": "X-Partner-ID",
+            "organization": "X-Organization-ID"
+        }.get(organization_type, "X-Tenant-ID")
+        
+        organization_id = whoami.get("id", "unknown")
+        region_url = whoami.get('apiHosts', {}).get("dataRegion", None)
 
+    except requests.exceptions.HTTPError as e:
+        print(f"HTTP Error: {e}")
+        return None, None, None, None
+    except ValueError as e:
+        print(f"Error decoding JSON: {e}")
+        return None, None, None, None
+    return organization_id, organization_header, organization_type, region_url
 
 def read_config():
     config = configparser.ConfigParser()
-    config.read('getSophosCentralData.config')
-    config.sections()
-    client_id = config['DEFAULT']['ClientID']
-    client_secret = config['DEFAULT']['ClientSecret']
-    
-    return(client_id, client_secret)
+    try:
+        config.read('getSophosCentralData.config')
+        client_id = config['DEFAULT']['ClientID']
+        client_secret = config['DEFAULT']['ClientSecret']
+    except KeyError as e:
+        print(f"Missing required configuration key: {e}")
+        return None, None  # Indicates failure to read configuration
+    except configparser.Error as e:
+        print(f"Error reading configuration: {e}")
+        return None, None  # General configuration error indicator
+    return client_id, client_secret
 
 # get alerts from Sophos Central
 def get_Alerts():
-    # Add X-Organization-ID to the headers dictionary
     headers[organization_header] = organization_id
-    result = requests.get(f"{'https://api-eu02.central.sophos.com/common/v1/alerts'}", headers=headers)
-    # Convert to JSON
-    result_json = json.loads(result.text)
-    #print(json.dumps(result_json, indent=2)) # debug
-
-    return result_json
+    response = requests.get("https://api-eu02.central.sophos.com/common/v1/alerts", headers=headers)
+    if response.status_code != 200:
+        print(f"Error fetching alerts: HTTP {response.status_code}")
+        print("Response:", response.text)
+        return {}  # or return an appropriate value indicating failure
+    try:
+        result_json = response.json()
+        if "items" not in result_json:
+            print("Unexpected JSON format. 'items' key not found.")
+            print("Response JSON:", json.dumps(result_json, indent=2))
+            return {}  # or return an appropriate value indicating the issue
+        return result_json
+    except ValueError as e:
+        print("Failed to decode JSON response:", e)
+        return {}  # or return an appropriate value indicating the issue
 
 # get endpoints data from sophos central
-def get_Endpoints(type):
-    # Add X-Organization-ID to the headers dictionary
+def get_Endpoints(endpoint_type):
     headers[organization_header] = organization_id
-    result = requests.get(f"{'https://api-eu02.central.sophos.com/endpoint/v1/endpoints?view=summary&lastSeenAfter=-P30D&pageSize=500&type=' + type}", headers=headers)
-    # Convert to JSON
-    result_json = json.loads(result.text)
-    #print(json.dumps(result_json, indent=2)) # debug
+    # Assuming `region_url` can be used to construct the full URL dynamically. If not applicable, adjust accordingly.
+    base_url = region_url if region_url else "https://api-eu02.central.sophos.com"
+    request_url = f"{base_url}/endpoint/v1/endpoints?view=summary&lastSeenAfter=-P30D&pageSize=500&type={endpoint_type}"
+    
+    response = requests.get(request_url, headers=headers)
+    
+    if response.status_code != 200:
+        print(f"Error fetching {endpoint_type} endpoints: HTTP {response.status_code}")
+        print("Response:", response.text)
+        return {}  # or an appropriate value indicating failure
 
-    return result_json
+    try:
+        result_json = response.json()
+        if "items" not in result_json:
+            print(f"Unexpected JSON format for {endpoint_type} endpoints. 'items' key not found.")
+            print("Response JSON:", json.dumps(result_json, indent=2))
+            return {}  # or an appropriate value indicating the issue
+        return result_json
+    except ValueError as e:
+        print(f"Failed to decode JSON response for {endpoint_type} endpoints:", e)
+        return {}  # or an appropriate value indicating the issue
 
 client_id, client_secret = read_config()
 token_url = 'https://id.sophos.com/api/v2/oauth2/token'
